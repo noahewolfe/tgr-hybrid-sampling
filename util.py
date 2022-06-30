@@ -2,6 +2,10 @@ import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 
+HYBRID_COLOR = "#3a0ca3"
+HYBRID_OVERLAP0_COLOR = "#b5179e"
+COMP_COLOR = "#4895ef"
+
 def dpi_key_to_label(key):
     """ Helper method to convert dpi names in bilby labels, prior files, etc. 
     to a latex label; e.g. d_phi_2 -> $\\delta \\varphi_2$. """
@@ -100,7 +104,12 @@ def plot_single_evolution(
 
     return fig, axes
 
-def violinplot(runs, param_key, truth, param_label, comp_label, square_y = True, share_y=False, hybrid_color="#3a0ca3", hybrid_overlap0_color="#b5179e", comp_color = "#4895ef", fig_kwargs=dict(), dpi_panels = [["d_phi_0"], ["d_phi_1"], ["d_phi_2","d_phi_3"], ["d_phi_4","d_phi_5L", "d_phi_6"], ["d_phi_6L", "d_phi_7"], ["d_alpha_2", "d_alpha_3", "d_alpha_4", "d_beta_2", "d_beta_3"] ]):
+def violinplot(runs, param_key, truth, param_label,
+    square_y = True, share_y=False, 
+    colors = [HYBRID_COLOR, HYBRID_OVERLAP0_COLOR, COMP_COLOR],
+    labels = [ "Hybrid", "Hybrid (no overlap)", "Dynesty" ],
+    fig_kwargs=dict(), 
+    dpi_panels = [["d_phi_0"], ["d_phi_1"], ["d_phi_2","d_phi_3"], ["d_phi_4","d_phi_5L", "d_phi_6"], ["d_phi_6L", "d_phi_7"], ["d_alpha_2", "d_alpha_3", "d_alpha_4", "d_beta_2", "d_beta_3"] ]):
     """ Make a violinplot collating results from multiple runs / postprocessing 
     jobs estimating beyond-GR deviation parameters $\delta p_i$.
     
@@ -132,9 +141,6 @@ def violinplot(runs, param_key, truth, param_label, comp_label, square_y = True,
         String (preferrably in LaTeX style) with which to label the y-axis,
         denoting the value associated with `param_key`.
 
-    comp_label : str
-        Label on figure legend to refer to the comparison run results.
-
     square_y : bool, optional
         Whether to square the axes y-limits about zero. (good for plotting dpi)
     
@@ -142,14 +148,17 @@ def violinplot(runs, param_key, truth, param_label, comp_label, square_y = True,
         Whether to share the same y-axis values among subplots, or not. 
         Use this instead of `sharey` in `fig_kwargs`.
 
-    hybrid_color : str, optional
-        Color to plot hybrid run (where overlap >= 0.9) results with.
+    colors : list of str, optional
+        Colors to plot for the hybrid run w/ overlap >= 0.9 results,
+        the hybrid run w/ overlap == 0.0 results, and the comparison run
+        results. Must match length of labels, and both must be <= 3 in length,
+        if labels is not None.
 
-    hybrid_overlap0_color : str, optional
-        Color to plot hybrid run (where overlap = 0.0) results with.
-    
-    comp_color : str, optional
-        Color to plot comparison run of hybrid results with.
+    labels : list of str, optional
+        Labels for the hybrid run w/ overlap >= 0.9 results,
+        the hybrid run w/ overlap == 0.0 results, and the comparison run
+        results. Must match length of colors, and both must be <= 3 in length.
+        If None, no legend will be generated for the figure.
 
     fig_kwargs : dict, optional
         Additional keyword arguments for the `plt.subplots` call.
@@ -187,13 +196,13 @@ def violinplot(runs, param_key, truth, param_label, comp_label, square_y = True,
         truth_color = "#d3d3d3" if _truth == 0 else "black"
 
         if runtype == "comp":
-            facecolor = comp_color
-            edgecolor = comp_color
+            facecolor = colors[2]
+            edgecolor = colors[2]
             linewidth = 1
             alpha = 0.75
         else:
             facecolor = "none"
-            edgecolor = hybrid_color if float(overlap) > 0 else hybrid_overlap0_color
+            edgecolor = colors[0] if float(overlap) > 0 else colors[1]
             linewidth = 3
             alpha = 1
 
@@ -223,23 +232,25 @@ def violinplot(runs, param_key, truth, param_label, comp_label, square_y = True,
             pc.set_alpha(alpha)
 
     # center y-axis on zero, label x-axis of each subplot
-    for panel, ax in zip(dpi_panels, axes):
+    for i,(panel, ax) in enumerate(zip(dpi_panels, axes)):
         if square_y:
             ymax = np.max(np.abs( list(ax.get_ylim()) ))
             ax.set_ylim(-ymax, ymax)
+
+        # don't add tick labels if we're not the leftmost subplot, when share_y
+        if share_y and i > 0:
+            ax.set_yticklabels([])
 
         ax.set_xticks([ i for i in range(len(panel)) ])
         ax.set_xticklabels([ dpi_key_to_label(dpi_key) for dpi_key in panel ])
 
     axes[0].set_ylabel(param_label)
-    axes[-1].legend(
-        [ 
-            mpl.patches.Patch(facecolor=hybrid_color), 
-            mpl.patches.Patch(facecolor=hybrid_overlap0_color), 
-            mpl.patches.Patch(facecolor=comp_color) 
-        ],
-        [ "Hybrid", "Hybrid (no overlap)", comp_label ]
-    )
+
+    if labels is not None:
+        axes[-1].legend(
+            [ mpl.patches.Patch(facecolor=color) for color in colors ],
+            labels
+        )
         
     plt.tight_layout()
 
