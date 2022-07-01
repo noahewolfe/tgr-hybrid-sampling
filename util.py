@@ -6,6 +6,10 @@ HYBRID_COLOR = "#3a0ca3"
 HYBRID_OVERLAP0_COLOR = "#b5179e"
 COMP_COLOR = "#4895ef"
 
+# nice shades of purple that end in HYBRID_COLOR
+HYBRID_EVOL_COLORS = [ "#B450F7", "#9B15F4", "#7D19F0", "#6210E5", "#3a0ca3" ]
+HYBRID_INIT_COLOR = "#f72585"
+
 def dpi_key_to_label(key):
     """ Helper method to convert dpi names in bilby labels, prior files, etc. 
     to a latex label; e.g. d_phi_2 -> $\\delta \\varphi_2$. """
@@ -46,7 +50,7 @@ def plot_single_evolution(
     
     axes[0, 1].axis('off')
     
-    hybrid_colors = np.array(["#f72585"] + [ "#B450F7", "#9B15F4", "#7D19F0", "#6210E5", "#3a0ca3" ], dtype="object")
+    hybrid_colors = np.array([HYBRID_INIT_COLOR] + HYBRID_EVOL_COLORS[:len(iterations) - 1], dtype="object")
         
     hybrid_chain = hybrid_resume["chain_array"]
     
@@ -78,15 +82,16 @@ def plot_single_evolution(
     
     ### interior plots ###
     ax = axes[1, 0]
-    if pos0 is None:
-        ax.scatter(
-            xdata, ydata,
-            s=2,
-            c=color,
-            zorder=0
-        )
-    else:
-        ax.scatter( pos0[0,:,xidx], pos0[0,:,y_hybrid_idx], s=2, c=color, zorder=0 )
+    #if pos0 is None:
+    #    ax.scatter(
+    #        xdata, ydata,
+    #        s=2,
+    #        c=color,
+    #        zorder=0
+    #    )
+    #else:
+    #    ax.scatter( pos0[0,:,xidx], pos0[0,:,y_hybrid_idx], s=2, c=color, zorder=0 )
+
     for color, it in zip(hybrid_colors,iterations):
         xdata = hybrid_chain[:,it,xidx]
         ydata = hybrid_chain[:,it,y_hybrid_idx]
