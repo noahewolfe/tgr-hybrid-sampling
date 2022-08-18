@@ -7,7 +7,7 @@ HYBRID_OVERLAP0_COLOR = "#b5179e"
 COMP_COLOR = "#4895ef"
 
 # nice shades of purple that end in HYBRID_COLOR
-HYBRID_EVOL_COLORS = [ "#B450F7", "#9B15F4", "#7D19F0", "#6210E5", "#3a0ca3" ]
+HYBRID_EVOL_COLORS = ["#DEB1FC", "#BC63F8", "#933FF3", "#6C1AEF", "#3A0CA3"]
 HYBRID_INIT_COLOR = "#f72585"
 
 def dpi_key_to_label(key):
@@ -35,12 +35,12 @@ def get_bilby_longname(label, trigger_times=[0]):
         return longnames
 
 def plot_single_evolution(
-    hybrid_result, hybrid_resume, xparam, yparam, xlabel, ylabel, xtrue, ytrue, 
-    pos0=None, iterations=None):
+    hybrid_result, hybrid_resume, xparam, yparam, xlabel, ylabel, xtrue=None, ytrue=None, 
+    pos0=None, iterations=None, xidx_override=None):
     """ Plot ptemcee sampling of the joint posterior of yparam vs. xparam
     over successive sampling iterations. """
     
-    xidx = hybrid_result.search_parameter_keys.index(xparam)
+    xidx = hybrid_result.search_parameter_keys.index(xparam) if xidx_override is None else xidx_override
     y_hybrid_idx = hybrid_result.search_parameter_keys.index(yparam)
     
     fig, axes = plt.subplots(figsize=(8, 8), nrows=2, ncols=2, sharex="col", sharey="row")
@@ -63,11 +63,12 @@ def plot_single_evolution(
             xdata = hybrid_chain[:,it,xidx]
         ax.hist(xdata, density=True, color=color, histtype="step", zorder=0)
 
-    ax.axvline(x=xtrue, linestyle="--", color="black", zorder=-1)
+    if xtrue is not None:
+        ax.axvline(x=xtrue, linestyle="--", color="black", zorder=-1)
             
     ### left hists ###
     ax = axes[1, 1]
-    for color,it in zip(hybrid_colors[:-1],iterations[:-1]):
+    for color,it in zip(hybrid_colors,iterations):
         if it == 0 and pos0 is not None:
             ydata = pos0[0,:,y_hybrid_idx]
         else:
@@ -78,7 +79,8 @@ def plot_single_evolution(
             zorder=0,
         )
 
-    ax.axhline(y=ytrue, linestyle="--", color="black", zorder=-1)
+    if ytrue is not None:
+        ax.axhline(y=ytrue, linestyle="--", color="black", zorder=-1)
     
     ### interior plots ###
     ax = axes[1, 0]
@@ -96,8 +98,12 @@ def plot_single_evolution(
         xdata = hybrid_chain[:,it,xidx]
         ydata = hybrid_chain[:,it,y_hybrid_idx]
         
-        ax.axvline(x=xtrue, linestyle="--", color="black", zorder=-1)
-        ax.axhline(y=ytrue, linestyle="--", color="black", zorder=-1)
+        if xtrue is not None:
+            ax.axvline(x=xtrue, linestyle="--", color="black", zorder=-1)
+
+        if ytrue is not None:
+            ax.axhline(y=ytrue, linestyle="--", color="black", zorder=-1)
+
         ax.scatter(
             xdata, ydata,
             s=2, c=color,
@@ -107,12 +113,14 @@ def plot_single_evolution(
     ax.set_xlabel(xlabel)
     ax.set_ylabel(ylabel)
 
-    return fig, axes
+    return fig
 
 def violinplot(runs, param_key, truth, param_label,
     square_y = True, share_y=False, 
     colors = [HYBRID_COLOR, HYBRID_OVERLAP0_COLOR, COMP_COLOR],
     labels = [ "Hybrid", "Hybrid (no overlap)", "Dynesty" ],
+    linewidths = [ 6, 3, 1 ],
+    linestyles = [ "-", "--", "-" ],
     fig_kwargs=dict(), 
     dpi_panels = [["d_phi_0"], ["d_phi_1"], ["d_phi_2","d_phi_3"], ["d_phi_4","d_phi_5L", "d_phi_6"], ["d_phi_6L", "d_phi_7"], ["d_alpha_2", "d_alpha_3", "d_alpha_4", "d_beta_2", "d_beta_3"] ]):
     """ Make a violinplot collating results from multiple runs / postprocessing 
@@ -203,13 +211,16 @@ def violinplot(runs, param_key, truth, param_label,
         if runtype == "comp":
             facecolor = colors[2]
             edgecolor = colors[2]
-            linewidth = 1
             alpha = 0.75
+            linewidth = linewidths[2]
+            linestyle = linestyles[2]
         else:
             facecolor = "none"
             edgecolor = colors[0] if float(overlap) > 0 else colors[1]
-            linewidth = 3
+            linewidth = linewidths[0] if float(overlap) > 0 else linewidths[1]
+            linestyle = linestyles[0] if float(overlap) > 0 else linestyles[1]
             alpha = 1
+
 
         # select the ax object to plot in based on list in dpi_panels that dpi is in
         # use the integer index of dpi in that list as the x-axis position of the violin
@@ -234,6 +245,7 @@ def violinplot(runs, param_key, truth, param_label,
             pc.set_facecolor(facecolor)
             pc.set_edgecolor(edgecolor)
             pc.set_linewidth(linewidth)
+            pc.set_linestyle(linestyle)
             pc.set_alpha(alpha)
 
     # center y-axis on zero, label x-axis of each subplot
@@ -253,10 +265,62 @@ def violinplot(runs, param_key, truth, param_label,
 
     if labels is not None:
         axes[-1].legend(
-            [ mpl.patches.Patch(facecolor=color) for color in colors ],
+            [ 
+                mpl.patches.Patch(facecolor=color, linestyle=lstyle, linewidth=lwidth) 
+                if (i == 2) else mpl.patches.Patch(facecolor="white", edgecolor=color, linestyle=lstyle, linewidth=lwidth) 
+                for i,(color, lstyle, lwidth) in enumerate(zip(colors, linestyles, linewidths))
+            ],
             labels
         )
         
     plt.tight_layout()
 
     return fig, axes
+
+
+def plot_multiple_lower_dim(high_dim_results, low_dim_result, **kwargs):
+    import bilby
+    import corner
+    from copy import deepcopy
+
+    ndim = len(kwargs["parameters"])
+
+    init_kwargs = deepcopy(kwargs)
+    init_kwargs["colours"] = init_kwargs["colours"][:-1]
+    init_kwargs["labels"]  = init_kwargs["labels"][:-1]
+
+    fig = bilby.core.result.plot_multiple(
+        high_dim_results,
+        **init_kwargs
+    )
+
+    extra_dim_range = fig.get_axes()[-1].get_xlim()
+
+    # stolen from bilby
+    low_dim_kwargs = dict(
+        bins=50, smooth=0.9, label_kwargs=dict(fontsize=16),
+        titles=False, quantiles=None,
+        truth_color="black",
+        levels=(1 - np.exp(-0.5), 1 - np.exp(-2), 1 - np.exp(-9 / 2.)),
+        plot_density=False, plot_datapoints=True, fill_contours=True,
+        max_n_ticks=3, hist_kwargs=dict(density=True)
+    )
+    low_dim_kwargs["color"] = kwargs["colours"][-1]
+
+    xs = low_dim_result.posterior[kwargs["parameters"]].values
+    fig = corner.corner(xs, fig = fig, **low_dim_kwargs)
+    axes = fig.get_axes()
+
+    axes[-1].set_xlim(extra_dim_range)
+    for k in range(1, ndim):
+        axes[-1 - k].set_ylim(extra_dim_range)
+    
+    axes[ndim - 1].legend(
+        [ 
+            mpl.lines.Line2D([], [], color=c)
+            for c in kwargs["colours"]
+        ],
+        kwargs["labels"]
+    )
+
+    return fig
