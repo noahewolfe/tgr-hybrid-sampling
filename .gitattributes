@@ -3,3 +3,7 @@ GW150914_results/150914_hybrid_step1_time-marginalized.hdf5 filter=lfs diff=lfs 
 GW150914_results/150914_hybrid_step2.hdf5 filter=lfs diff=lfs merge=lfs -text
 GW150914_results/150914_hybrid_step2_time-marginalized.hdf5 filter=lfs diff=lfs merge=lfs -text
 GW150914_results/150914_d_phi_2_no-overlap_time-marginalized_resume.pickle filter=lfs diff=lfs merge=lfs -text
+bgr_results/injection_direct.hdf5 filter=lfs diff=lfs merge=lfs -text
+bgr_results/injection_hybrid_step2_no-overlap.hdf5 filter=lfs diff=lfs merge=lfs -text
+bgr_results/injection_hybrid_step2.hdf5 filter=lfs diff=lfs merge=lfs -text
+bgr_results/injection_d_phi_2_resume.pickle filter=lfs diff=lfs merge=lfs -text
