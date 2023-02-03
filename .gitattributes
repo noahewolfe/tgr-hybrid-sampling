@@ -12,3 +12,9 @@ GW150914_results/150914_hybrid_step1_time-maximized.hdf5 filter=lfs diff=lfs mer
 GW150914_results/150914_hybrid_step2_resume.hdf5 filter=lfs diff=lfs merge=lfs -text
 GW150914_results/150914_d_phi_2_no-overlap_resume.pickle filter=lfs diff=lfs merge=lfs -text
 GW150914_results/150914_d_phi_2_no-overlap_time-maximized_resume.pickle filter=lfs diff=lfs merge=lfs -text
+bgr_results/injection_d_phi_2_no-overlap_resume.pickle filter=lfs diff=lfs merge=lfs -text
+bgr_results/time-maximized filter=lfs diff=lfs merge=lfs -text
+GW150914_results/README.md filter=lfs diff=lfs merge=lfs -text
+GW150914_results/150914_hybrid_step1_time-maximized_C.hdf5 filter=lfs diff=lfs merge=lfs -text
+GW150914_results/150914_hybrid_step2_time-maximized_C.hdf5 filter=lfs diff=lfs merge=lfs -text
+GW150914_GWTC-1-TGR.hdf5 filter=lfs diff=lfs merge=lfs -text

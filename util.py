@@ -113,7 +113,7 @@ def plot_single_evolution(
     ax.set_xlabel(xlabel)
     ax.set_ylabel(ylabel)
 
-    return fig
+    return fig, axes
 
 def violinplot(runs, param_key, truth, param_label,
     square_y = True, share_y=False, 
