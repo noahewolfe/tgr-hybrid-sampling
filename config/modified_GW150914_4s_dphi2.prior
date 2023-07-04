@@ -1,0 +1,33 @@
+chirp_mass = bilby.gw.prior.UniformInComponentsChirpMass(name='chirp_mass', minimum=21.418182160215295, maximum=41.97447913941358, unit='$M_{\odot}$')
+mass_ratio = bilby.gw.prior.UniformInComponentsMassRatio(name='mass_ratio', minimum=0.05, maximum=1.0)
+mass_1 = Constraint(name='mass_1', minimum=1, maximum=1000)
+mass_2 = Constraint(name='mass_2', minimum=1, maximum=1000)
+a_1 = Uniform(name='a_1', minimum=0, maximum=0.99)
+a_2 = Uniform(name='a_2', minimum=0, maximum=0.99)
+tilt_1 = Sine(name='tilt_1')
+tilt_2 = Sine(name='tilt_2')
+phi_12 = Uniform(name='phi_12', minimum=0, maximum=2 * np.pi, boundary='periodic')
+phi_jl = Uniform(name='phi_jl', minimum=0, maximum=2 * np.pi, boundary='periodic')
+luminosity_distance =  PowerLaw(alpha=2, name='luminosity_distance', minimum=10, maximum=10000, unit='Mpc')
+dec = Cosine(name='dec')
+ra = Uniform(name='ra', minimum=0, maximum=2 * np.pi, boundary='periodic')
+theta_jn = Sine(name='theta_jn')
+psi = Uniform(name='psi', minimum=0, maximum=np.pi, boundary='periodic')
+phase = Uniform(name='phase', minimum=0, maximum=2 * np.pi, boundary='periodic')
+azimuth = Uniform(minimum=0, maximum=6.283185307179586, name=None, latex_label='$\\epsilon$', unit=None, boundary='periodic')
+zenith = Sine(minimum=0, maximum=3.141592653589793, name=None, latex_label='$\\kappa$', unit=None, boundary=None)
+H1_time = Uniform(minimum=1126259462.2910001, maximum=1126259462.491, name='H1_time', latex_label='$t_H$', unit='$s$', boundary=None)
+d_phi_0 = 0
+d_phi_1 = 0
+d_phi_2 = Uniform(-5, 5, latex_label="$\\delta \\varphi_2$")
+d_phi_3 = 0
+d_phi_4 = 0
+d_phi_5L = 0
+d_phi_6 = 0
+d_phi_6L = 0
+d_phi_7 = 0
+d_alpha_2 = 0
+d_alpha_3 = 0
+d_alpha_4 = 0
+d_beta_2 = 0
+d_beta_3 = 0

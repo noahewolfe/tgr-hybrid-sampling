@@ -1,3 +1,6 @@
+# Custom
+.distance_marginalization_lookup.npz
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

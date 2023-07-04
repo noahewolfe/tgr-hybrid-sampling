@@ -3,5 +3,5 @@ font.serif  : "Computer Modern Roman"
 font.size   : 20
 text.usetex : True
 grid.alpha  : 0
-
+savefig.bbox: tight
 figure.dpi  : 300
