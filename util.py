@@ -1,3 +1,4 @@
+import os
 import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
@@ -9,6 +10,91 @@ COMP_COLOR = "#4895ef"
 # nice shades of purple that end in HYBRID_COLOR
 HYBRID_EVOL_COLORS = ["#DEB1FC", "#BC63F8", "#933FF3", "#6C1AEF", "#3A0CA3"]
 HYBRID_INIT_COLOR = "#f72585"
+
+dpi_keys = [
+    'd_phi_0',
+    'd_phi_1',
+    'd_phi_2',
+    'd_phi_3',
+    'd_phi_4',
+    'd_phi_5L',
+    'd_phi_6',
+    'd_phi_6L',
+    'd_phi_7',
+    'd_alpha_2',
+    'd_alpha_3',
+    'd_alpha_4',
+    'd_beta_2',
+    'd_beta_3'
+]
+
+def hybrid_run_to_hdf5(hdfpath, outdir, label, columns=['chirp_mass', 'mass_ratio', 'ra', 'dec'], trigger_times=[0], dpi_keys=dpi_keys):
+    from bilby.core.result import read_in_result
+
+    resultdir = os.path.join(outdir, 'result')
+    longname = get_bilby_longname(label, trigger_times=trigger_times)
+
+    gr_result = read_in_result(os.path.join(resultdir, f'{longname}_dynesty_result.json'))
+    gr_result.posterior[columns].to_hdf(hdfpath, key='gr', mode='w')
+
+    for dpi_key in dpi_keys:
+        for overlap in [0, 0.9]:
+            overlapstr = '' if overlap > 0 else '_no-overlap'
+            key = dpi_key if overlap > 0 else f'{dpi_key}_no_overlap'
+
+            dpi_result_path = os.path.join(
+                resultdir, f'{longname}_dynesty_{dpi_key}{overlapstr}_result.json'
+            )
+
+            if os.path.isfile(dpi_result_path):
+                dpi_result = read_in_result(dpi_result_path)
+
+                try:
+                    dpi_result.posterior[columns + [dpi_key]].to_hdf(hdfpath, key=key, mode='a')
+                except ValueError:
+                    print('error for key=',key)
+                    pass
+
+def posterior_to_result(hdfpath=None, key=None, posterior=None, junk_cols=[], **kwargs):
+    """
+
+    Turn a posterior DataFrame into a bare-bones `bilby.core.result.Result` object.
+    
+    Parameters
+    ==========
+    posterior: pandas.DataFrame
+        The posterior DataFrame.
+    jc: array_like
+        Any columns to add, filled with junk data (useful for plotting when some results
+        were generated sampling in a parameter (e.g. a GR-deviation) and others were
+        not.
+
+    Returns
+    =======
+    bilby.core.result.Result: bare-bones result object.
+
+    """
+    from bilby.core.result import Result
+
+    if posterior is None:
+        from pandas import read_hdf
+        if hdfpath is None or key is None:
+            raise ValueError('No posterior DataFrame provided, so need a path + key to the hdf5 file with the posterior.')
+        
+        posterior = read_hdf(hdfpath, key = key)
+
+    for jc in junk_cols:
+        posterior[jc] = np.random.normal(
+            loc = 100,
+            scale = 0.1,
+            size = len(posterior)
+        )
+    
+    return Result(
+        posterior=posterior,
+        search_parameter_keys=list(posterior.columns),
+        **kwargs
+    )
 
 def dpi_key_to_label(key):
     """ Helper method to convert dpi names in bilby labels, prior files, etc. 
@@ -279,8 +365,8 @@ def violinplot(runs, param_key, truth, param_label,
 
 
 def plot_multiple_lower_dim(high_dim_results, low_dim_result, **kwargs):
-    import bilby
-    import corner
+    from bilby.core.result import plot_multiple
+    from corner import corner
     from copy import deepcopy
 
     ndim = len(kwargs["parameters"])
@@ -289,7 +375,7 @@ def plot_multiple_lower_dim(high_dim_results, low_dim_result, **kwargs):
     init_kwargs["colours"] = init_kwargs["colours"][:-1]
     init_kwargs["labels"]  = init_kwargs["labels"][:-1]
 
-    fig = bilby.core.result.plot_multiple(
+    fig = plot_multiple(
         high_dim_results,
         **init_kwargs
     )
@@ -308,7 +394,7 @@ def plot_multiple_lower_dim(high_dim_results, low_dim_result, **kwargs):
     low_dim_kwargs["color"] = kwargs["colours"][-1]
 
     xs = low_dim_result.posterior[kwargs["parameters"]].values
-    fig = corner.corner(xs, fig = fig, **low_dim_kwargs)
+    fig = corner(xs, fig = fig, **low_dim_kwargs)
     axes = fig.get_axes()
 
     axes[-1].set_xlim(extra_dim_range)

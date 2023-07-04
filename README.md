@@ -4,9 +4,9 @@ Repository with data, analysis, and plots for [arXiv:2208.12872](https://arxiv.o
 
 ## Code
 
-In this work, we used a [lightly-modified fork of `bilby`](https://git.ligo.org/noah.wolfe/bilby). Beyond-GR gravitational waveforms were generated with a [custom source model](https://git.ligo.org/noah.wolfe/bilby-tgr).
+In this work, we use `bilby>=1.0.6` and a [custom source model]([custom source model](https://git.ligo.org/noah.wolfe/bilby-tgr)) for beyond-GR waveforms to analyze simulated signals and GW150914.
 
-Hybrid sampling is available as a ready-to-use pipeline on top of `bilby_pipe`; pipeline code to launch both steps of hybrid sampling (sampling first in `dynesty`, and then `ptemcee`), as well the postprocessing executable to launch `ptemcee` on a `dynesty` result file can be found [here](https://git.ligo.org/noah.wolfe/bgr_source_model).
+Hybrid sampling is available as a ready-to-use pipeline on top of `bilby_pipe`; pipeline code to launch both steps of hybrid sampling (sampling first in `dynesty`, and then `ptemcee`), as well the postprocessing executable to launch `ptemcee` on a `dynesty` result file can be found [here](https://github.com/noahewolfe/hybrid_sampling).
 
 ## Manifest
 
